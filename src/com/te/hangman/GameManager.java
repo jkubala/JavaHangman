@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class GameManager {
+	final String os = System.getProperty("os.name");
 	Scanner scanner = new Scanner(System.in);
 	int defaultNOfTriesLeft = 15;
 	int nOfTriesLeft = defaultNOfTriesLeft;
@@ -335,8 +336,11 @@ public class GameManager {
 	}
 
 	private void clearScreen() {
-		System.out.println("\033[H\033[2J");
-		System.out.flush();
+		try {
+			new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+		} catch (Exception E) {
+			System.out.println(E);
+		}
 	}
 
 	private boolean playerExists(final String name) {

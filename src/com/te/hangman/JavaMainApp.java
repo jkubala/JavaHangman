@@ -6,5 +6,4 @@ public class JavaMainApp {
 		GameManager gameManager = new GameManager();
 		gameManager.newGame();
 	}
-
 }
