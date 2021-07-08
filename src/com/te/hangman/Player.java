@@ -1,5 +1,4 @@
 package com.te.hangman;
-
 public class Player {
 	private String name;
 	private int score;
@@ -24,4 +23,10 @@ public class Player {
 		this.name = name;
 		score = 0;
 	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
+
 }
