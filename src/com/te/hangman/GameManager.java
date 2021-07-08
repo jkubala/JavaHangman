@@ -14,6 +14,7 @@ public class GameManager {
 	int nOfTriesLeft = defaultNOfTriesLeft;
 	String wordToGuess = "";
 	String wordToGuessUnderscore = "";
+	String guessedLetters = "";
 	boolean gameWon = false;
 	boolean exitGame = false;
 	Player currentPlayer = null;
@@ -76,13 +77,23 @@ public class GameManager {
 	}
 
 	private void printPlayerScores() {
+		if (getNOfUnderscoresLeft() == 0) {
+			System.out.println("The guessing team won!");
+		} else {
+			System.out.println("The gamemaster won!");
+		}
 		List<Player> scoreboardToSortList = new ArrayList<Player>(players);
 		scoreboardToSortList.sort(Comparator.comparing(Player::getScore));
 		Collections.reverse(scoreboardToSortList);
 
 		for (int i = 0; i < scoreboardToSortList.size(); i++) {
-			System.out.println(i + 1 + getPlaceSuffix(i + 1) + scoreboardToSortList.get(i).getName() + " - Score - "
-					+ scoreboardToSortList.get(i).getScore());
+			if (currentGameMaster.getName().equals(scoreboardToSortList.get(i).getName())) {
+				System.out.println(i + 1 + getPlaceSuffix(i + 1) + scoreboardToSortList.get(i).getName() + " - Score - "
+						+ scoreboardToSortList.get(i).getScore() + " - gamemaster");
+			} else {
+				System.out.println(i + 1 + getPlaceSuffix(i + 1) + scoreboardToSortList.get(i).getName() + " - Score - "
+						+ scoreboardToSortList.get(i).getScore());
+			}
 		}
 	}
 
@@ -167,22 +178,37 @@ public class GameManager {
 		guess = guess.toUpperCase();
 		if (guess.length() == 0) {
 			System.out.println("Error - empty guess inputed!");
+			scanner.nextLine();
+			return;
 		} else if (guess.length() == 1) {
-			if (wordToGuess.indexOf(guess.charAt(0)) != -1) {
-				currentPlayer.setScore(currentPlayer.getScore() + updateDisplayedSecretWord(guess.charAt(0)));
-				if (wordToGuessUnderscore.indexOf('_') == -1) {
-					gameState = GameState.END_BOARD;
-				}
+			if (guessedLetters.contains(guess)) {
+				System.out.println("Error - This letter was already guessed!");
+				scanner.nextLine();
+				return;
 			} else {
-				nOfTriesLeft--;
+				guessedLetters += guess;
+				if (wordToGuess.indexOf(guess.charAt(0)) != -1) {
+					currentPlayer.setScore(currentPlayer.getScore() + updateDisplayedSecretWord(guess.charAt(0)));
+					if (wordToGuessUnderscore.indexOf('_') == -1) {
+						gameState = GameState.END_BOARD;
+					}
+				} else {
+					nOfTriesLeft--;
+				}
 			}
 		} else {
 			if (wordToGuess.equals(guess)) {
-				currentPlayer.setScore(currentPlayer.getScore() + 1);
+				currentPlayer.setScore(currentPlayer.getScore() + getNOfUnderscoresLeft());
 				gameState = GameState.END_BOARD;
 			} else {
 				nOfTriesLeft--;
 			}
+
+		}
+		if (nOfTriesLeft == 0) {
+			int nOfUnderscoresRemaining = getNOfUnderscoresLeft();
+			currentGameMaster.setScore(nOfUnderscoresRemaining);
+			gameState = GameState.END_BOARD;
 		}
 	}
 
@@ -326,6 +352,7 @@ public class GameManager {
 		nOfTriesLeft = defaultNOfTriesLeft;
 		wordToGuess = "";
 		wordToGuessUnderscore = "";
+		guessedLetters = "";
 	}
 
 	private Player getNextPlayerFrom(int indexFrom) {
@@ -334,5 +361,9 @@ public class GameManager {
 		} else {
 			return players.get(0);
 		}
+	}
+
+	private int getNOfUnderscoresLeft() {
+		return (int) wordToGuessUnderscore.chars().filter(ch -> ch == '_').count();
 	}
 }
