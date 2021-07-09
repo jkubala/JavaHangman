@@ -1,5 +1,8 @@
 package com.te.hangman;
 
+/**
+ * Holds player's name, overall score and score achieved this round
+ */
 public class Player {
 	private String name;
 	private int overallScore;
@@ -36,6 +39,6 @@ public class Player {
 
 	@Override
 	public String toString() {
-		return name;
+		return name + " - score: " + overallScore;
 	}
 }

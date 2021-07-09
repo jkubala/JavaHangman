@@ -2,12 +2,20 @@ package com.te.hangman;
 
 import java.util.Scanner;
 
+/**
+ * Handles the game main loop - setting and guessing the word
+ */
 public class WordManager {
 	private String wordToGuess = "";
 	private String wordToGuessUnderscore = "";
+	private String guessedLetters = "";
 	private int defaultNOfTriesLeft = 15;
 	private int nOfTriesLeft = defaultNOfTriesLeft;
-	private String guessedLetters = "";
+	private boolean exitRound = false;
+
+	public boolean exitRound() {
+		return exitRound;
+	}
 
 	String getWordToGuess() {
 		return wordToGuess;
@@ -25,13 +33,39 @@ public class WordManager {
 		guessedLetters += guess;
 	}
 
+	boolean wordWasGuessed() {
+		if (getNOfUnderscoresLeft() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Checks if the word has at least 2 alphabet characters
+	 */
+	boolean hasValidWordToGuess() {
+		return (!wordToGuess.trim().isEmpty()  && wordToGuess.length() > 1 && wordToGuess.matches("[a-zA-Z]+"));
+	}
+
+	/**
+	 * Returns number of underscores in the word showed to the players Used to see
+	 * if the word is guessed (n == 0)
+	 */
+	private int getNOfUnderscoresLeft() {
+		return (int) wordToGuessUnderscore.chars().filter(ch -> ch == '_').count();
+	}
+
+	/**
+	 * Handles UI of setting the word and checks, if it is valid
+	 */
 	void setWordToGuess(Scanner scanner, Player gameMaster) {
 		boolean validGuessWord = false;
 		do {
 			Utility.clearScreen();
 			System.out.println("Gamemaster: " + gameMaster.getName() + "\nEnter word, that will be guessed:");
 			wordToGuess = scanner.nextLine();
-			if (hasValidWordToGuess() && wordToGuess.length() > 1 && wordToGuess.matches("[a-zA-Z]+")) {
+			if (hasValidWordToGuess()) {
 				validGuessWord = true;
 			} else {
 				System.out.println("Invalid word entered!");
@@ -47,6 +81,18 @@ public class WordManager {
 		wordToGuess = wordToGuess.toUpperCase();
 	}
 
+	/**
+	 * Formats the wordToGuess into the initial underscore form to show to players
+	 */
+	void setDisplayedWordToGuess() {
+		for (int i = 0; i < wordToGuess.length(); i++) {
+			wordToGuessUnderscore += "_ ";
+		}
+	}
+
+	/**
+	 * Replaces underscores in the word showed to players with letters
+	 */
 	int updateDisplayedSecretWord(char letterToUpdateWith) {
 		char[] DispSecWordArr = wordToGuessUnderscore.toCharArray();
 		int nOfReplacements = 0;
@@ -60,11 +106,18 @@ public class WordManager {
 		return nOfReplacements;
 	}
 
+	/**
+	 * Handles user input and ends the round if the tries run out, or the word is
+	 * guessed
+	 */
 	boolean handleGuessing(Scanner scanner, Player currentPlayer, Player currentGameMaster) {
 		printGameScreen(currentPlayer);
 		System.out.println("Enter a letter, or whole word");
 		String guess = scanner.nextLine();
 		guess = guess.toUpperCase();
+		if (guess.equals("1")) {
+			exitRound = true;
+		}
 		if (guess.length() == 0) {
 			System.out.println("Error - empty guess inputed!");
 			scanner.nextLine();
@@ -75,7 +128,8 @@ public class WordManager {
 			} else {
 				guessedLetters += guess;
 				if (getWordToGuess().indexOf(guess.charAt(0)) != -1) {
-					currentPlayer.setScoreToAddThisRound(currentPlayer.getScoreToAddThisRound() + updateDisplayedSecretWord(guess.charAt(0)));
+					currentPlayer.setScoreToAddThisRound(
+							currentPlayer.getScoreToAddThisRound() + updateDisplayedSecretWord(guess.charAt(0)));
 					if (getWordToGuessUnderscore().indexOf('_') == -1) {
 						return true;
 					}
@@ -102,40 +156,25 @@ public class WordManager {
 		}
 	}
 
+	/**
+	 * Helper function printing the state of the game to players
+	 * 
+	 * @param playerOnTurn
+	 */
 	private void printGameScreen(Player playerOnTurn) {
 		Utility.clearScreen();
 		System.out.println("Tries left: " + nOfTriesLeft + "\nSecret word:\n" + getWordToGuessUnderscore()
-				+ "\nGuessed letters: " + guessedLetters
-				+ "\nTurn of player: " + playerOnTurn.getName());
+				+ "\nGuessed letters: " + guessedLetters + "\nTurn of player: " + playerOnTurn.getName());
 	}
 
-	void setDisplayedWordToGuess() {
-		for (int i = 0; i < wordToGuess.length(); i++) {
-			wordToGuessUnderscore += "_ ";
-		}
-	}
-
+	/**
+	 * Resets all variables in case of round end
+	 */
 	void resetGameVariables() {
 		nOfTriesLeft = defaultNOfTriesLeft;
 		wordToGuess = "";
 		wordToGuessUnderscore = "";
 		guessedLetters = "";
-	}
-
-	boolean wordWasGuessed() {
-		if (getNOfUnderscoresLeft() == 0) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	boolean hasValidWordToGuess()
-	{
-		return !wordToGuess.trim().isEmpty();
-	}
-
-	private int getNOfUnderscoresLeft() {
-		return (int) wordToGuessUnderscore.chars().filter(ch -> ch == '_').count();
+		exitRound = false;
 	}
 }

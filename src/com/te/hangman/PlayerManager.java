@@ -7,6 +7,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Manages player accounts, who is the current gamemaster,
+ * whose turn it is and scoreboard
+ */
 public class PlayerManager {
 	private List<Player> players = new ArrayList<Player>();
 	private Player currentPlayer = null;
@@ -23,7 +27,26 @@ public class PlayerManager {
 	List<Player> getPlayers() {
 		return players;
 	}
+	
+	Player getPlayerAtIndex(int indexAt) {
+		return players.get(indexAt);
+	}
 
+	int nOfPlayers() {
+		return players.size();
+	}
+
+	boolean playerExists(final String name) {
+		return players.stream().filter(player -> player.getName().equals(name)).findFirst().isPresent();
+	}
+
+	void deletePlayerByID(final String name) {
+		players.removeIf(player -> player.getName().equals(name));
+	}
+
+	/**
+	 * Handles the UI and user input needed to create a player account
+	 */
 	void createPlayer(Scanner scanner) {
 		boolean validName = false;
 		String newPlayerName;
@@ -45,6 +68,9 @@ public class PlayerManager {
 		players.add(newPlayer);
 	}
 
+	/**
+	 * Handles the UI and user input needed to delete a player account
+	 */
 	void deletePlayer(Scanner scanner) {
 		Utility.clearScreen();
 		if (players.size() == 0) {
@@ -60,6 +86,10 @@ public class PlayerManager {
 		}
 	}
 
+	/**
+	 * Used to get next player using cycling on the beginning of the list
+	 * if end is reached
+	 */
 	Player getNextPlayerFrom(Player playerFrom) {
 		int indexFrom = players.indexOf(playerFrom);
 		if (indexFrom + 1 < players.size()) {
@@ -69,22 +99,9 @@ public class PlayerManager {
 		}
 	}
 
-	Player getPlayerAtIndex(int indexAt) {
-		return players.get(indexAt);
-	}
-
-	int nOfPlayers() {
-		return players.size();
-	}
-
-	boolean playerExists(final String name) {
-		return players.stream().filter(player -> player.getName().equals(name)).findFirst().isPresent();
-	}
-
-	void deletePlayerByID(final String name) {
-		players.removeIf(player -> player.getName().equals(name));
-	}
-
+	/**
+	 * Give the turn to the next player, who is not a gameMaster
+	 */
 	void setNewPlayerTurn() {
 		if (currentPlayer == null) {
 			currentPlayer = getPlayerAtIndex(0);
@@ -92,12 +109,14 @@ public class PlayerManager {
 			currentPlayer = getNextPlayerFrom(currentPlayer);
 		}
 
-		// Shift one more position from where it currently is (on gameMaster)
 		if (currentPlayer.getName().equals(currentGameMaster.getName())) {
 			currentPlayer = getNextPlayerFrom(currentPlayer);
 		}
 	}
 
+	/**
+	 * Sets the newGameMaster between individual game rounds
+	 */
 	void setNewGameMaster() {
 		if (currentGameMaster == null) {
 			currentGameMaster = getPlayerAtIndex(0);
@@ -106,6 +125,9 @@ public class PlayerManager {
 		}
 	}
 
+	/**
+	 * Displays existing players in the option in the main menu
+	 */
 	void showCurrentPlayers(Scanner scanner) {
 		Utility.clearScreen();
 		if (nOfPlayers() > 0) {
@@ -116,14 +138,19 @@ public class PlayerManager {
 		scanner.nextLine();
 	}
 
+	/**
+	 * Prints game result and shows players beginning with the
+	 * one with the highest score
+	 */
 	void printPlayerScores(boolean guessingTeamWon) {
 		if (guessingTeamWon) {
 			System.out.println("The guessing team won!");
 			setScoreOfGuessersDuringThisRound();
 		} else {
 			System.out.println("The gamemaster won!");
-			currentGameMaster.setScore(currentGameMaster.getScoreToAddThisRound());
+			setScoreOfGameMasterDuringThisRound();
 		}
+		System.out.println("Score of all players so far:");
 		List<Player> scoreboardToSortList = new ArrayList<Player>(getPlayers());
 		scoreboardToSortList.sort(Comparator.comparing(Player::getScore));
 		Collections.reverse(scoreboardToSortList);
@@ -139,6 +166,19 @@ public class PlayerManager {
 		}
 	}
 
+	/**
+	 * Sets score to add during round to zero, when game round is exited
+	 */
+	public void resetScoreOfAllPlayersInThisRound() {
+		for (Player player : players) {
+				player.setScoreToAddThisRound(0);
+		}
+	}
+
+	/**
+	 * Transfers the score from this round to the overall score of the players
+	 * (Except the gameMaster, which has lost in this case)
+	 */
 	private void setScoreOfGuessersDuringThisRound() {
 		for (Player player : players) {
 			if (!player.equals(currentGameMaster)) {
@@ -146,7 +186,20 @@ public class PlayerManager {
 			}
 		}
 	}
+	
+	/**
+	 * If the word was not guessed, the players will not receive any score,
+	 * but the gameMaster will receive a point for each underscore left
+	 */
+	private void setScoreOfGameMasterDuringThisRound()
+	{
+		resetScoreOfAllPlayersInThisRound();
+		currentGameMaster.setScore(currentGameMaster.getScoreToAddThisRound());
+	}
 
+	/**
+	 * Helps scoreboard function to add number suffixes behind player places
+	 */
 	private String getPlaceSuffix(int place) {
 		switch (place) {
 		case 1: {
