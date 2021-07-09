@@ -145,6 +145,7 @@ public class GameManager {
 		/**
 		 * Print user options and try to get valid input
 		 */
+		Utility.clearScreen();
 		System.out.println("1. Play again\n2. Main Menu\n3. Exit");
 		playerManager.printPlayerScores(wordManager.wordWasGuessed());
 		int userinput = 0;
