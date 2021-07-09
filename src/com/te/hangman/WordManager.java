@@ -44,8 +44,14 @@ public class WordManager {
 	/**
 	 * Checks if the word has at least 2 alphabet characters
 	 */
-	boolean hasValidWordToGuess() {
-		return (!wordToGuess.trim().isEmpty()  && wordToGuess.length() > 1 && wordToGuess.matches("[a-zA-Z]+"));
+	boolean isValidWordToGuess(String wordToValidate, boolean isAGuess) {
+		if (isAGuess) {
+			return (!wordToValidate.trim().isEmpty() && wordToValidate.length() >= 1
+					&& wordToValidate.matches("[a-zA-Z]+"));
+		} else {
+			return (!wordToValidate.trim().isEmpty() && wordToValidate.length() > 1
+					&& wordToValidate.matches("[a-zA-Z]+"));
+		}
 	}
 
 	/**
@@ -65,7 +71,7 @@ public class WordManager {
 			Utility.clearScreen();
 			System.out.println("Gamemaster: " + gameMaster.getName() + "\nEnter word, that will be guessed:");
 			wordToGuess = scanner.nextLine();
-			if (hasValidWordToGuess()) {
+			if (isValidWordToGuess(wordToGuess, false)) {
 				validGuessWord = true;
 			} else {
 				System.out.println("Invalid word entered!");
@@ -111,25 +117,48 @@ public class WordManager {
 	 * guessed
 	 */
 	boolean handleGuessing(Scanner scanner, Player currentPlayer, Player currentGameMaster) {
+		/**
+		 * Print basic game information for the players and get their guess
+		 */
 		printGameScreen(currentPlayer);
-		System.out.println("Enter a letter, or whole word");
+		System.out.println("Enter a letter, or whole word\nTo exit this round, type \"1\"");
 		String guess = scanner.nextLine();
 		guess = guess.toUpperCase();
+		/**
+		 * Exit game, if they typed "1"
+		 */
 		if (guess.equals("1")) {
 			exitRound = true;
+			return false;
 		}
-		if (guess.length() == 0) {
-			System.out.println("Error - empty guess inputed!");
+		/**
+		 * Catch empty guess input
+		 */
+		if (!isValidWordToGuess(guess, true)) {
+			System.out.println("Error - invalid guess inputed!");
 			scanner.nextLine();
-		} else if (guess.length() == 1) {
+		}
+		/**
+		 * If letter was inputed and is in the guessedLetters, report invalid input
+		 */
+		else if (guess.length() == 1) {
 			if (guessedLetters.contains(guess)) {
-				System.out.println("Error - This letter was already guessed!");
+				System.out.println("This letter was already guessed!");
 				scanner.nextLine();
 			} else {
+				/**
+				 * If not guessed yet, add to guessedLetters, give player score and update
+				 * secret word, if the secret word contains the letter. If not, subtract
+				 * one try.
+				 */
 				guessedLetters += guess;
 				if (getWordToGuess().indexOf(guess.charAt(0)) != -1) {
 					currentPlayer.setScoreToAddThisRound(
 							currentPlayer.getScoreToAddThisRound() + updateDisplayedSecretWord(guess.charAt(0)));
+					/**
+					 * If the word shown to players does not contain underscores anymore
+					 * return true to end guessing
+					 */
 					if (getWordToGuessUnderscore().indexOf('_') == -1) {
 						return true;
 					}
@@ -138,15 +167,23 @@ public class WordManager {
 				}
 			}
 		} else {
+			/**
+			 * If player tried to guess the whole word and it was right, give him
+			 * score for each underscore left and return true to end guessing.
+			 * Otherwise just subtract one try
+			 */
 			if (getWordToGuess().equals(guess)) {
 				currentPlayer.setScoreToAddThisRound(currentPlayer.getScoreToAddThisRound() + getNOfUnderscoresLeft());
-				wordToGuessUnderscore = wordToGuess;
 				return true;
 			} else {
 				nOfTriesLeft--;
 			}
 
 		}
+		/**
+		 * If out of tries, end the game and give gameMaster score for each
+		 * underscore that is left. Otherwise, just return false - guess again.
+		 */
 		if (nOfTriesLeft == 0) {
 			int nOfUnderscoresRemaining = getNOfUnderscoresLeft();
 			currentGameMaster.setScoreToAddThisRound(nOfUnderscoresRemaining);

@@ -19,7 +19,8 @@ public class GameManager {
 	private boolean exitGame = false;
 
 	/**
-	 * Creates a new game instance, main body of the app
+	 * Creates a new game instance, main body of the app and executes different
+	 * behaviours based on state the game is in - default MAIN_MENU
 	 */
 	void newGame() {
 		do {
@@ -47,8 +48,10 @@ public class GameManager {
 	 * checks if there are enough players for entering the game
 	 */
 	private void handleMainMenu() {
+		/**
+		 * Print options the user has and try to get a valid input
+		 */
 		printMainMenu();
-
 		int userinput = 0;
 		try {
 			userinput = scanner.nextInt();
@@ -57,6 +60,9 @@ public class GameManager {
 			scanner.nextLine();
 		}
 
+		/**
+		 * Evaluate the input
+		 */
 		switch (userinput) {
 		case 1: {
 			if (playerManager.nOfPlayers() >= 2) {
@@ -106,11 +112,20 @@ public class GameManager {
 	 * state to end board, which ends the game round.
 	 */
 	private void handleGameLogic() {
-		if (!wordManager.hasValidWordToGuess()) {
+		/**
+		 * If the validWord is not yet set - this means that other values
+		 * are probably not set as well, do the basic setup
+		 */
+		if (!wordManager.isValidWordToGuess(wordManager.getWordToGuess(), false)) {
 			playerManager.setNewGameMaster();
 			wordManager.setWordToGuess(scanner, playerManager.getCurrentGameMaster());
 			wordManager.setDisplayedWordToGuess();
 		}
+		/**
+		 * Give turn to a player and guess as long as the whole word is not guessed,
+		 * then change state to end board
+		 * Alternatively end the round and reset everything
+		 */
 		playerManager.setNewPlayerTurn();
 		if (wordManager.handleGuessing(scanner, playerManager.getCurrentPlayer(),
 				playerManager.getCurrentGameMaster())) {
@@ -127,6 +142,9 @@ public class GameManager {
 	 * to main menu, or exits the application
 	 */
 	private void displayEndBoard() {
+		/**
+		 * Print user options and try to get valid input
+		 */
 		System.out.println("1. Play again\n2. Main Menu\n3. Exit");
 		playerManager.printPlayerScores(wordManager.wordWasGuessed());
 		int userinput = 0;
@@ -137,6 +155,9 @@ public class GameManager {
 			scanner.nextLine();
 		}
 
+		/**
+		 * Evaluate the input
+		 */
 		switch (userinput) {
 		case 1: {
 			wordManager.resetGameVariables();

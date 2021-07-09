@@ -143,6 +143,9 @@ public class PlayerManager {
 	 * one with the highest score
 	 */
 	void printPlayerScores(boolean guessingTeamWon) {
+		/**
+		 * Print who won
+		 */
 		if (guessingTeamWon) {
 			System.out.println("The guessing team won!");
 			setScoreOfGuessersDuringThisRound();
@@ -151,10 +154,17 @@ public class PlayerManager {
 			setScoreOfGameMasterDuringThisRound();
 		}
 		System.out.println("Score of all players so far:");
+		
+		/**
+		 * Sort players by score in a new list, to keep their order intact
+		 */
 		List<Player> scoreboardToSortList = new ArrayList<Player>(getPlayers());
 		scoreboardToSortList.sort(Comparator.comparing(Player::getScore));
 		Collections.reverse(scoreboardToSortList);
 
+		/**
+		 * Print each player's score, and possibly, if the player is gamemaster
+		 */
 		for (int i = 0; i < scoreboardToSortList.size(); i++) {
 			if (getCurrentGameMaster().getName().equals(scoreboardToSortList.get(i).getName())) {
 				System.out.println(i + 1 + getPlaceSuffix(i + 1) + scoreboardToSortList.get(i).getName() + " - Score - "
